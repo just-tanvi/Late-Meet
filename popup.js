@@ -76,10 +76,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       const urlMatch = meetTab.url?.match(/meet\.google\.com\/([a-z\-]+)/);
       const meetingId = urlMatch ? urlMatch[1] : null;
 
+      // --- Get Media Stream ID in foreground (popup) to ensure user gesture propagation ---
+      const streamId = await new Promise((resolve) => {
+        chrome.tabCapture.getMediaStreamId({ targetTabId: meetTab.id }, (id) => {
+          if (chrome.runtime.lastError) {
+            console.error('[LateMeet] Popup getMediaStreamId error:', chrome.runtime.lastError.message);
+            resolve(null);
+          } else {
+            resolve(id);
+          }
+        });
+      });
+
+      if (!streamId) {
+        throw new Error('Capture permission denied. Try clicking the extension icon again on the Meet tab.');
+      }
+
       const response = await chrome.runtime.sendMessage({
         type: 'MANUAL_START_AUDIO',
         tabId: meetTab.id,
-        meetingId: meetingId
+        meetingId: meetingId,
+        streamId: streamId
       });
 
       if (response && response.success) {

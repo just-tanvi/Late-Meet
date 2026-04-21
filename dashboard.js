@@ -50,10 +50,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       const urlMatch = meetTab.url?.match(/meet\.google\.com\/([a-z\-]+)/);
       const meetingId = urlMatch ? urlMatch[1] : null;
 
+      // --- Get Media Stream ID in foreground (dashboard) to ensure user gesture propagation ---
+      const streamId = await new Promise((resolve) => {
+        chrome.tabCapture.getMediaStreamId({ targetTabId: meetTab.id }, (id) => {
+          if (chrome.runtime.lastError) {
+            console.error('[Dashboard] getMediaStreamId error:', chrome.runtime.lastError.message);
+            resolve(null);
+          } else {
+            resolve(id);
+          }
+        });
+      });
+
+      if (!streamId) {
+        throw new Error('Capture permission denied. Try clicking the "Start Audio" button again.');
+      }
+
       const response = await chrome.runtime.sendMessage({
         type: 'MANUAL_START_AUDIO',
         tabId: meetTab.id,
-        meetingId: meetingId
+        meetingId: meetingId,
+        streamId: streamId
       });
 
       if (response && response.success) {
@@ -80,13 +97,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   function setAudioBtnActive(active) {
     if (!audioBtn) return;
     if (active) {
-      audioBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" style="margin-right: 6px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> Audio Active';
+      audioBtn.style.display = 'none';
       audioBtn.classList.add('active');
-      audioBtn.disabled = true;
     } else {
-      audioBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" style="margin-right: 6px;"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg> Start Audio';
+      audioBtn.style.display = 'flex';
       audioBtn.classList.remove('active');
       audioBtn.disabled = false;
+      audioBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon" style="margin-right: 6px;"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" x2="12" y1="19" y2="22"></line></svg> Start Audio';
     }
   }
 
