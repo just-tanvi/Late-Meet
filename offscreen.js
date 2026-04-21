@@ -13,13 +13,16 @@ const SILENCE_LIMIT = 3;
 let consecutiveSilent = 0;
 
 function toBase64(arrayBuffer) {
-  let binary = '';
   const bytes = new Uint8Array(arrayBuffer);
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i += 1) {
-    binary += String.fromCharCode(bytes[i]);
+  const chunkSize = 0x8000;
+  const chunks = [];
+
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const slice = bytes.subarray(i, i + chunkSize);
+    chunks.push(String.fromCharCode(...slice));
   }
-  return btoa(binary);
+
+  return btoa(chunks.join(''));
 }
 
 function pickSupportedMimeType() {

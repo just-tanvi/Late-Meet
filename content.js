@@ -101,16 +101,6 @@
         }));
       }
 
-      if (getTextValue(chatInput) === message) {
-        chatInput.dispatchEvent(new KeyboardEvent('keyup', {
-          key: 'Enter',
-          code: 'Enter',
-          keyCode: 13,
-          which: 13,
-          bubbles: true
-        }));
-      }
-
       console.log(`${COPILOT_PREFIX} Chat message send attempted.`);
       return true;
     } catch (err) {
