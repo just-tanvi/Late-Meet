@@ -6,7 +6,7 @@
 **Catch up instantly when you join a meeting late — without bots, servers, or transcript storage.**
 
 [![GSSoC 2026](https://img.shields.io/badge/GSSoC-2026-orange?style=for-the-badge&logo=git&logoColor=white)](https://gssoc.girlscript.tech/)
-[![Version](https://img.shields.io/badge/Version-1.0.0-black?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/shouri123/Late-Meet)
+[![Version](https://img.shields.io/badge/Version-1.1.0-black?style=for-the-badge&logo=googlechrome&logoColor=white)](https://github.com/shouri123/Late-Meet)
 [![License](https://img.shields.io/badge/License-MIT-black?style=for-the-badge)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Google_Meet-black?style=for-the-badge&logo=googlemeet)](https://meet.google.com)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-black?style=for-the-badge)](CONTRIBUTING.md)
