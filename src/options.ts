@@ -1,5 +1,6 @@
 interface Settings {
   summarizationInterval?: number;
+  vadThreshold?: number;
   aiModel?: string;
   lateJoinerBriefing?: boolean;
   topicDetection?: boolean;
@@ -18,6 +19,21 @@ document.addEventListener("DOMContentLoaded", async () => {
   ])) as { openai_api_key?: string; elevenlabs_api_key?: string; settings?: Settings };
 
   const settings: Settings = config.settings || {};
+
+  // VAD threshold slider
+  const vadSlider = document.getElementById("vad-threshold") as HTMLInputElement | null;
+
+  const vadValue = document.getElementById("vad-value");
+
+  if (vadSlider && vadValue) {
+    vadSlider.value = String(settings.vadThreshold || 0.012);
+
+    vadValue.textContent = vadSlider.value;
+
+    vadSlider.addEventListener("input", () => {
+      vadValue.textContent = vadSlider.value;
+    });
+  }
 
   const openaiKeyInput = document.getElementById("openai-key") as HTMLInputElement | null;
   if (openaiKeyInput && config.openai_api_key) {
@@ -89,6 +105,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     const newSettings = {
       summarizationInterval: validatedInterval,
+      vadThreshold: vadSlider ? parseFloat(vadSlider.value) : 0.012,
       aiModel: (document.getElementById("ai-model") as HTMLSelectElement)?.value,
       lateJoinerBriefing: (document.getElementById("late-joiner-toggle") as HTMLInputElement)
         ?.checked,
