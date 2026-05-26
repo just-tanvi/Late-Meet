@@ -517,24 +517,21 @@ function notifyNewActionItems(items: ActionItem[]) {
     if (!key || notifiedActionItems.has(key)) continue;
     const message = key.length > 100 ? key.slice(0, 97) + "..." : key;
     const notifId = `lm-action-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-    chrome.notifications.create(notifId, {
-      type: "basic",
-      iconUrl: chrome.runtime.getURL("src/icons/icon128.png"),
-      title: "New Action Item",
-      message,
-      priority: 1,
-    chrome.notifications.create(notifId, {
-      type: "basic",
-      iconUrl: chrome.runtime.getURL("src/icons/icon128.png"),
-      title: "New Action Item",
-      message,
-      priority: 1,
-    }, () => {
-      if (!chrome.runtime.lastError) {
-        notifiedActionItems.add(key);
-      }
-    });
-    });
+    chrome.notifications.create(
+      notifId,
+      {
+        type: "basic",
+        iconUrl: chrome.runtime.getURL("src/icons/icon128.png"),
+        title: "New Action Item",
+        message,
+        priority: 1,
+      },
+      () => {
+        if (!chrome.runtime.lastError) {
+          notifiedActionItems.add(key);
+        }
+      },
+    );
   }
 }
 
