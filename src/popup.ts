@@ -66,6 +66,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ——— Start Copilot (Audio Capture with User Gesture) ———
   const copilotBtn = document.getElementById("start-copilot-btn") as HTMLButtonElement | null;
 
+  async function handleStopAudio(btn?: HTMLButtonElement | null) {
+    if (!lastState?.audioActive) return;
+
+    try {
+      if (btn) btn.disabled = true;
+      await chrome.runtime.sendMessage({ type: "MANUAL_STOP_AUDIO" });
+    } catch (err) {
+      console.error("[LateMeet] Failed to stop audio:", err);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
   async function handleStartAudio(btn: HTMLButtonElement) {
     const textEl = btn.querySelector(".copilot-btn-text");
     const originalText = textEl?.textContent || "Start";
@@ -177,7 +190,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   copilotBtn?.addEventListener("click", () => handleStartAudio(copilotBtn));
   document.getElementById("meeting-start-audio-btn")?.addEventListener("click", (e) => {
     const btn = e.currentTarget as HTMLButtonElement | null;
-    if (btn) handleStartAudio(btn);
+    if (!btn) return;
+    if (lastState?.audioActive) {
+      handleStopAudio(btn);
+      return;
+    }
+    handleStartAudio(btn);
   });
 
   function setCopilotActive(active: boolean) {
@@ -185,6 +203,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     const miniBtn = document.getElementById("meeting-start-audio-btn");
     const iconEl = copilotBtn.querySelector(".copilot-btn-icon");
     const textEl = copilotBtn.querySelector(".copilot-btn-text");
+
+    const getMiniBtnLabelNode = () => {
+      if (!miniBtn) return null;
+      return (
+        Array.from(miniBtn.childNodes)
+          .reverse()
+          .find((n) => n.nodeType === Node.TEXT_NODE && String(n.textContent || "").trim()) || null
+      );
+    };
 
     if (active) {
       copilotBtn.classList.remove("loading");
@@ -194,7 +221,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         iconEl.innerHTML =
           '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
       copilotBtn.disabled = true;
-      if (miniBtn) miniBtn.style.display = "none";
+      if (miniBtn) {
+        miniBtn.style.display = "flex";
+        miniBtn.classList.add("active");
+        miniBtn.title = "Stop audio capture";
+        const labelNode = getMiniBtnLabelNode();
+        if (labelNode) labelNode.textContent = " Stop Audio";
+      }
     } else {
       copilotBtn.classList.remove("active");
       if (textEl) textEl.textContent = "Start Copilot";
@@ -202,7 +235,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         iconEl.innerHTML =
           '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg>';
       copilotBtn.disabled = false;
-      if (miniBtn) miniBtn.style.display = "flex";
+      if (miniBtn) {
+        miniBtn.style.display = "flex";
+        miniBtn.classList.remove("active");
+        miniBtn.title = "Start audio capture";
+        const labelNode = getMiniBtnLabelNode();
+        if (labelNode) labelNode.textContent = " Start Audio";
+      }
     }
   }
 
