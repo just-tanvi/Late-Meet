@@ -202,7 +202,7 @@ jobs:
                   }
                 }
 
-                welcomeMsg += `Please make sure to review and apply any code review comments or automated suggestions provided by CodeRabbit or GitHub Copilot in the comments below! We will review your PR as soon as possible!` + STAR_REMINDER;
+                welcomeMsg += `Please review any automated suggestions or code review comments that may appear below! We will review your PR as soon as possible!` + STAR_REMINDER;
                 await github.rest.issues.createComment({
                   owner,
                   repo,
