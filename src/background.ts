@@ -219,11 +219,20 @@ const state: State = {
   audioActive: false,
   targetTabId: null,
   lastSummarizedAt: 0,
-  pendingJoiners: new Set(),
   participantCount: 0,
 };
 
 let selfParticipantName: string | null = null;
+
+// ---------------------------------------------------------------------------
+// Transient Late-Joiner Processing State
+// ---------------------------------------------------------------------------
+// Tracks which late joiners are currently being processed for welcome messages.
+// This is NOT persisted or shared with UI — it's purely for preventing duplicate
+// welcome message sends during the maybeWelcomeJoiners() workflow.
+// Entries are added when processing begins and removed when it completes (see finally block).
+// This state is discarded on service worker suspension and not restored.
+const pendingJoinersInFlight = new Set<string>();
 
 function normalizeParticipantName(value: string | null | undefined): string {
   return String(value || "")
@@ -252,7 +261,7 @@ function resetState() {
   state.audioActive = false;
   state.targetTabId = null;
   state.lastSummarizedAt = 0;
-  state.pendingJoiners.clear();
+  pendingJoinersInFlight.clear();
   audioChunkQueue.clear();
   state.participantCount = 0;
   selfParticipantName = null;
@@ -881,18 +890,18 @@ async function maybeWelcomeJoiners(tabId: number | undefined, joiners: string[])
       !name ||
       normalizedName === normalizeParticipantName("You") ||
       (normalizedSelf && normalizedName === normalizedSelf) ||
-      state.pendingJoiners.has(name)
+      pendingJoinersInFlight.has(name)
     ) {
       continue;
     }
 
-    state.pendingJoiners.add(name);
+    pendingJoinersInFlight.add(name);
     try {
       const text = await generateLateJoinerMessage(name);
       await sendChatToTab(tabId, text);
       addTimeline(`Late joiner brief sent to ${name}`);
     } finally {
-      state.pendingJoiners.delete(name);
+      pendingJoinersInFlight.delete(name);
     }
   }
 }
